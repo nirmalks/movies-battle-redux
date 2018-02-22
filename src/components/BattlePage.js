@@ -133,7 +133,7 @@ class BattlePage extends Component {
                     />
               
                 </form>
-                <Button onClick={this.submitClickHandler} raised color="primary" className={classes.button}>
+                <Button onClick={this.submitClickHandler} raised="true" color="primary" className={classes.button}>
                 Submit
                 </Button>   
 
