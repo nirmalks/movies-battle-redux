@@ -11,6 +11,7 @@ import { bindActionCreators } from "redux";
 import { fetchMovies } from "../actions/index";
 import compose from 'recompose/compose';
 import { Map } from 'immutable';
+
 const styles = theme => ({
   root: {
     flexGrow: 1,
@@ -28,19 +29,13 @@ const styles = theme => ({
 });
 
 class MovieCard extends Component {
-
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     this.props.fetchMovies();
   }
 
   render() {
     const { classes } = this.props;
-   
-    if(this.props.topMovies.length === 0) {
+    if(this.props.moviesData.topMovies.length === 0) {
       return (
         <div>Loading...</div>
       );
@@ -49,7 +44,7 @@ class MovieCard extends Component {
      
       <div>
       <Grid container className={classes.container} spacing={24}>
-        {  this.props.topMovies[0].map((movie) =>
+        {  this.props.moviesData.topMovies.map((movie) =>
           
           <Grid item md={3} xs={6} key={movie.id}>
             <Card className={classes.card} >
@@ -93,7 +88,8 @@ MovieCard.propTypes = {
 };
 
 function mapStateToProps(state) {
-  return { topMovies : state.movies };
+  console.log(state);
+  return { moviesData : state.movies };
 }
 
 export default compose(withStyles(styles),
