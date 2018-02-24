@@ -8,6 +8,12 @@ import { apiKey } from '../api_key';
 import Card, { CardContent, CardMedia } from 'material-ui/Card';
 import Typography from 'material-ui/Typography';
 import Icon from 'material-ui/Icon';
+import { Field, reduxForm } from "redux-form";
+import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { fetchMovieById } from "../actions/index";
+import compose from 'recompose/compose';
 
 const styles = theme => ({
   container: {
@@ -62,96 +68,68 @@ function MovieCard(props) {
 }
 
 class BattlePage extends Component {
-    state = {
-        movie1Name : "",
-        movie2Name : "" ,
-        loading: false,
-        movie1Result: [],
-        movie2Result: [],
-        winner :"",
-    }
+  state = {
+    movie1Name: "",
+    movie2Name: "",
+    loading: false,
+    movie1Result: [],
+    movie2Result: [],
+    winner: ""
+  };
 
-    handleMovie1Change = name => event => {
-        this.setState({ movie1Name : event.target.value})
-    }
+  renderField(field) {
+    const  {classes } = this.props;
+    return (
+      <TextField
+        id={field.name}
+        label={field.label}
+        className={classes.textField}
+        {...field.input}
+        margin="normal"
+      />
+    );
+  }
 
-    handleMovie2Change = name => event => {
-        this.setState({ movie2Name : event.target.value})
-    }
+  onSubmit(values) {
+    console.log(values);
+    this.props.fetchMovieById(values);
+  }
 
-    submitClickHandler = () => {
-        let movie1Data = fetch(`https://api.themoviedb.org/3/find/${this.state.movie1Name}?api_key=${apiKey}&external_source=imdb_id`).then(
-          response => {
-            response.json().then(data => {
-              this.setState({ movie1Result: data.movie_results[0] });
-            });
-          }
-        );
+  render() {
+    const { classes , handleSubmit } = this.props;
+    return (
+      <div>
+        <Header />
+        <h1>Movies Battle!</h1>
 
-        let movie2Data = fetch(`https://api.themoviedb.org/3/find/${this.state.movie2Name}?api_key=${apiKey}&external_source=imdb_id`).then(
-          response => {
-            response.json().then(data => {
-              this.setState({ movie2Result: data.movie_results[0] });
-            });
-          }
-        );
-
-        Promise.all([movie1Data , movie2Data]).then( () => {
-            if(this.state.movie1Result.vote_average > this.state.movie2Result.vote_average) {
-              this.setState({winner : "Movie1"});
-            } else if (this.state.movie1Result.vote_average === this.state.movie2Result.vote_average) {
-              this.setState({winner : "Mie"});
-            } else {
-              this.setState({winner : "Movie2"});
-            }
-        }
-        );
-    }
-
-    render() {
-        const { classes } = this.props;    
-        return (
-            <div >
-                <Header />
-                <h1>Movies Battle!</h1>
-                <form className={classes.container} noValidate autoComplete="off">
-                    <TextField
-                    id="movie1-name"
-                    label="Enter an IMDB ID"
-                    className={classes.textField}
-                    value={this.state.movie1Name}
-                    onChange={this.handleMovie1Change('movie1-name')}
-                    margin="normal"
-                    />
-                    <TextField
-                    id="movie2-name"
-                    label="Enter an IMDB ID"
-                    className={classes.textField}
-                    value={this.state.movie2Name}
-                    onChange={this.handleMovie2Change('movie2-name')}
-                    margin="normal"
-                    />
-              
-                </form>
-                <Button onClick={this.submitClickHandler} raised="true" color="primary" className={classes.button}>
-                Submit
-                </Button>   
-
-                { this.state.winner ?          
-                  <div>
-                  <div>
-                  <h3 > 
-                  {this.state.winner === "Movie1" || this.state.winner === "Movie2" ? `The winner is ${this.state.winner} !` : 'Its a Tie !'}
-                  </h3>
-                  </div>
-                  <div className={classes.container}>
-                  <MovieCard classes = {classes} isWinner = {this.state.winner === "Movie1" ?  true : false } result={this.state.winner} movie={this.state.movie1Result}/>
-                  <MovieCard classes = {classes} isWinner = {this.state.winner === "Movie2" ?  true : false } movie={this.state.movie2Result} result={this.state.winner}/>  
-                  </div>
-                  </div>: "" }         
-            </div>
-        );
-    }
+        <form
+          className={classes.container}
+          noValidate
+          onSubmit={handleSubmit(this.onSubmit.bind(this))}
+        >
+          <Field
+            label="Enter an IMDB ID"
+            name="movie1-name"
+            component={this.renderField.bind(this)}
+          />
+          <Field
+            label="Enter an IMDB ID"
+            name="movie2-name"
+            component={this.renderField.bind(this)}
+          />
+          <Button
+            type="submit"
+            raised="true"
+            color="primary"
+            className={classes.button}
+          >
+            Submit
+          </Button>
+        
+        </form>
+      </div>
+    );
+  }
 }
 
 BattlePage.propTypes = {
@@ -164,4 +142,16 @@ MovieCard.propTypes = {
   result: PropTypes.string.isRequired,
   isWinner: PropTypes.bool.isRequired
 }
-export default withStyles(styles)(BattlePage);
+
+function mapStateToProps(state) {
+  return { movie1Data : state.movie1 , movie2Data : state.movie2 };
+}
+
+BattlePage = compose(withStyles(styles),
+connect(mapStateToProps, { fetchMovieById }))(BattlePage);
+
+BattlePage = reduxForm({
+  form:'BattleForm'
+})(BattlePage);
+
+export default BattlePage;
