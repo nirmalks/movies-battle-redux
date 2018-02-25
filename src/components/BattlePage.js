@@ -4,14 +4,11 @@ import Header from './Header';
 import { withStyles } from 'material-ui/styles';
 import TextField from 'material-ui/TextField';
 import Button from 'material-ui/Button';
-import { apiKey } from '../api_key';
 import Card, { CardContent, CardMedia } from 'material-ui/Card';
 import Typography from 'material-ui/Typography';
 import Icon from 'material-ui/Icon';
 import { Field, reduxForm } from "redux-form";
-import { Link } from "react-router-dom";
 import { connect } from "react-redux";
-import { bindActionCreators } from "redux";
 import { fetchMovieById } from "../actions/index";
 import compose from 'recompose/compose';
 
@@ -32,7 +29,8 @@ const styles = theme => ({
   },
   card: {
     maxWidth: 345,
-    height:500
+    height:500,
+    minWidth:300
   },
   media: {
     height: 425,
@@ -68,15 +66,9 @@ function MovieCard(props) {
 }
 
 class BattlePage extends Component {
-  state = {
-    movie1Name: "",
-    movie2Name: "",
-    loading: false,
-    movie1Result: [],
-    movie2Result: [],
-    winner: ""
-  };
-
+  constructor(props) {
+    super(props);
+  }
   renderField(field) {
     const  {classes } = this.props;
     return (
@@ -91,12 +83,21 @@ class BattlePage extends Component {
   }
 
   onSubmit(values) {
-    console.log(values);
     this.props.fetchMovieById(values);
   }
 
   render() {
-    const { classes , handleSubmit } = this.props;
+    const { classes , handleSubmit , winner} = this.props;
+    console.log(this.props.movie1Data);
+    let movie1Data , movie2Data;
+    if(this.props.movie1Data && this.props.movie2Data) {
+      movie1Data = this.props.movie1Data[0];
+      console.log(movie1Data);
+    movie2Data = this.props.movie2Data[0]; 
+    console.log(movie2Data);
+    }
+    
+    console.log(this.props);
     return (
       <div>
         <Header />
@@ -127,6 +128,19 @@ class BattlePage extends Component {
           </Button>
         
         </form>
+
+        { winner ?          
+          <div>
+          <div>
+          <h3 > 
+          {winner === "Movie1" || winner === "Movie2" ? `The winner is ${winner} !` : 'Its a Tie !'}
+          </h3>
+          </div>
+          <div className={classes.container}>
+          <MovieCard classes = {classes} isWinner = {winner === "Movie1" ?  true : false } result={winner} movie={movie1Data}/>
+          <MovieCard classes = {classes} isWinner = {winner === "Movie2" ?  true : false } movie={movie2Data} result={winner}/>  
+          </div>
+          </div>: "" }    
       </div>
     );
   }
@@ -144,14 +158,15 @@ MovieCard.propTypes = {
 }
 
 function mapStateToProps(state) {
-  return { movie1Data : state.movie1 , movie2Data : state.movie2 };
+  console.log(state.movies);
+  return { movie1Data : state.movies.movie1 , movie2Data : state.movies.movie2 , winner: state.movies.winner };
 }
-
-BattlePage = compose(withStyles(styles),
-connect(mapStateToProps, { fetchMovieById }))(BattlePage);
 
 BattlePage = reduxForm({
   form:'BattleForm'
 })(BattlePage);
+
+BattlePage = compose(withStyles(styles),
+connect(mapStateToProps, { fetchMovieById }))(BattlePage);
 
 export default BattlePage;
